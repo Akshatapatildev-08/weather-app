@@ -1,0 +1,199 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&display=swap');
+
+:root {
+  --bg-ink: #07111f;
+  --bg-ocean: #0f2d3f;
+  --bg-sun: #c86b3c;
+  --glass: rgba(238, 250, 255, 0.16);
+  --glass-border: rgba(255, 255, 255, 0.38);
+  --text-main: #f5f7e8;
+  --text-muted: #cee3db;
+  --accent: #ffd179;
+  --accent-dark: #c66d2e;
+  --danger: #ff8d85;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Sora', sans-serif;
+  color: var(--text-main);
+  background:
+    radial-gradient(circle at 8% 12%, rgba(255, 209, 121, 0.25) 0, transparent 34%),
+    radial-gradient(circle at 92% 88%, rgba(200, 107, 60, 0.3) 0, transparent 42%),
+    linear-gradient(135deg, var(--bg-ink), var(--bg-ocean));
+}
+
+.app-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 20px 40px;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: clamp(1.8rem, 4.5vw, 2.9rem);
+  letter-spacing: 0.02em;
+}
+
+.topbar p {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+}
+
+.glass {
+  backdrop-filter: blur(14px);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  box-shadow: 0 12px 28px rgba(3, 11, 21, 0.35);
+}
+
+.search-wrap {
+  margin-top: 24px;
+  padding: 14px;
+}
+
+.search-row {
+  display: flex;
+  gap: 10px;
+}
+
+.search-input,
+.filters input,
+.inline-controls input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+  padding: 10px 12px;
+  font-family: inherit;
+}
+
+.search-input::placeholder,
+.filters input::placeholder {
+  color: rgba(245, 247, 232, 0.7);
+}
+
+.btn-primary,
+.tab-btn,
+.suggestion {
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.btn-primary {
+  border-radius: 12px;
+  background: linear-gradient(120deg, var(--accent), var(--bg-sun));
+  color: #102236;
+  font-weight: 700;
+  padding: 0 20px;
+}
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.suggestions {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.suggestion {
+  text-align: left;
+  border-radius: 10px;
+  padding: 9px 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+}
+
+.tabs {
+  margin-top: 16px;
+  padding: 9px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tab-btn {
+  text-transform: capitalize;
+  background: rgba(8, 18, 36, 0.35);
+  color: var(--text-main);
+  padding: 9px 14px;
+  border-radius: 999px;
+}
+
+.tab-btn.active {
+  background: rgba(255, 209, 121, 0.82);
+  color: #092035;
+}
+
+.error {
+  margin-top: 14px;
+  padding: 12px;
+  color: var(--danger);
+}
+
+.grid {
+  margin-top: 16px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.stat-card {
+  padding: 16px;
+}
+
+.stat-title {
+  margin: 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.stat-card h3 {
+  margin: 10px 0 6px;
+  font-size: 1.2rem;
+}
+
+.muted {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.filters,
+.inline-controls {
+  margin-top: 16px;
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.filters label,
+.inline-controls label {
+  display: grid;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 640px) {
+  .search-row {
+    flex-direction: column;
+  }
+
+  .btn-primary {
+    min-height: 42px;
+  }
+}
