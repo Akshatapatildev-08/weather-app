@@ -1,8 +1,11 @@
 const API_KEY = import.meta.env.VITE_WEATHERSTACK_API_KEY || 'eaeab95b1fa26be9da694b9454fdf974';
-const BASE_URL = import.meta.env.VITE_WEATHERSTACK_BASE_URL || '/api/weatherstack';
+const BASE_URL =
+  import.meta.env.VITE_WEATHERSTACK_BASE_URL ||
+  (import.meta.env.DEV ? '/api/weatherstack' : 'https://api.weatherstack.com');
 const OPEN_METEO_FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
 const OPEN_METEO_ARCHIVE_URL = 'https://archive-api.open-meteo.com/v1/archive';
 const OPEN_METEO_MARINE_URL = 'https://marine-api.open-meteo.com/v1/marine';
+const OPEN_METEO_GEOCODE_URL = 'https://geocoding-api.open-meteo.com/v1/search';
 
 function formatApiError(error = {}) {
   const code = Number(error.code);
@@ -33,7 +36,14 @@ function formatApiError(error = {}) {
 function shouldFallback(err) {
   const code = Number(err?.code);
   const status = Number(err?.status);
-  return code === 105 || code === 603 || code === 104 || code === 615 || status === 429;
+  return (
+    code === 105 ||
+    code === 603 ||
+    code === 104 ||
+    code === 615 ||
+    status === 429 ||
+    String(err?.message || '').toLowerCase().includes('invalid response from weatherstack')
+  );
 }
 
 function weatherCodeToText(code) {
@@ -128,7 +138,60 @@ async function requestOpenMeteo(url, params = {}) {
 }
 
 export function getCurrent(query) {
-  return request('/current', { query });
+  return getCurrentWithFallback(query);
+}
+
+async function geocodeOpenMeteo(query) {
+  const data = await requestOpenMeteo(OPEN_METEO_GEOCODE_URL, {
+    name: query,
+    count: '1',
+    language: 'en',
+    format: 'json',
+  });
+  return data?.results?.[0] || null;
+}
+
+async function getCurrentWithFallback(query) {
+  try {
+    return await request('/current', { query });
+  } catch (err) {
+    if (!shouldFallback(err)) {
+      throw err;
+    }
+  }
+
+  const place = await geocodeOpenMeteo(query);
+  if (!place?.latitude || !place?.longitude) {
+    throw new Error('Unable to resolve location from fallback weather provider.');
+  }
+
+  const data = await requestOpenMeteo(OPEN_METEO_FORECAST_URL, {
+    latitude: String(place.latitude),
+    longitude: String(place.longitude),
+    current: 'temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code',
+    timezone: 'auto',
+  });
+
+  return {
+    request: { source: 'open-meteo-fallback' },
+    location: {
+      name: place.name,
+      country: place.country || '',
+      region: place.admin1 || '',
+      lat: String(place.latitude),
+      lon: String(place.longitude),
+      timezone_id: data?.timezone || place.timezone || 'auto',
+      localtime: new Date().toISOString().slice(0, 16).replace('T', ' '),
+      utc_offset: '',
+    },
+    current: {
+      observation_time: new Date().toLocaleTimeString(),
+      temperature: data?.current?.temperature_2m ?? 0,
+      weather_descriptions: [weatherCodeToText(data?.current?.weather_code)],
+      wind_speed: data?.current?.wind_speed_10m ?? 0,
+      humidity: data?.current?.relative_humidity_2m ?? 0,
+    },
+  };
 }
 
 export async function getForecast(query, forecastDays = 5) {
@@ -140,7 +203,7 @@ export async function getForecast(query, forecastDays = 5) {
     }
   }
 
-  const current = await getCurrent(query);
+  const current = await getCurrentWithFallback(query);
   const lat = current?.location?.lat;
   const lon = current?.location?.lon;
   if (!lat || !lon) {
@@ -189,7 +252,7 @@ export async function getHistorical(query, date) {
     }
   }
 
-  const current = await getCurrent(query);
+  const current = await getCurrentWithFallback(query);
   const lat = current?.location?.lat;
   const lon = current?.location?.lon;
   if (!lat || !lon) {
